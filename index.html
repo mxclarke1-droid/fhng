@@ -1,0 +1,362 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Santa Tracker</title>
+
+<style>
+html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: black;
+}
+
+#status {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 20;
+    color: white;
+    background: rgba(0,0,0,0.85);
+    padding: 15px;
+    font-family: Arial, sans-serif;
+    font-size: 18px;
+    border-radius: 8px;
+}
+</style>
+
+<!-- THREE.JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<!-- GLTF LOADER MUST COME BEFORE OUR CODE -->
+<script src="https://threejs.org/examples/js/loaders/GLTFLoader.js"></script>
+
+</head>
+
+<body>
+
+<div id="status">
+    🌎 Starting...
+</div>
+
+<script>
+
+/* ==========================================
+   SCENE
+========================================== */
+
+const scene = new THREE.Scene();
+
+scene.background =
+    new THREE.Color(0x000000);
+
+
+/* ==========================================
+   CAMERA
+========================================== */
+
+const camera =
+    new THREE.PerspectiveCamera(
+        45,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        100
+    );
+
+camera.position.z = 5;
+
+
+/* ==========================================
+   RENDERER
+========================================== */
+
+const renderer =
+    new THREE.WebGLRenderer({
+        antialias: true
+    });
+
+renderer.setSize(
+    window.innerWidth,
+    window.innerHeight
+);
+
+document.body.appendChild(
+    renderer.domElement
+);
+
+
+/* ==========================================
+   LIGHT
+========================================== */
+
+const light =
+    new THREE.DirectionalLight(
+        0xffffff,
+        3
+    );
+
+light.position.set(
+    5,
+    5,
+    5
+);
+
+scene.add(light);
+
+
+scene.add(
+    new THREE.AmbientLight(
+        0xffffff,
+        1
+    )
+);
+
+
+/* ==========================================
+   EARTH
+========================================== */
+
+const earthGeometry =
+    new THREE.SphereGeometry(
+        2,
+        64,
+        64
+    );
+
+
+const earthMaterial =
+    new THREE.MeshPhongMaterial({
+        color: 0x1687ff
+    });
+
+
+const earth =
+    new THREE.Mesh(
+        earthGeometry,
+        earthMaterial
+    );
+
+scene.add(earth);
+
+
+/* ==========================================
+   SANTA GROUP
+========================================== */
+
+const santaGroup =
+    new THREE.Group();
+
+scene.add(santaGroup);
+
+
+/*
+   Put Santa directly in front
+   of the Earth.
+*/
+
+santaGroup.position.set(
+    0,
+    0,
+    2.5
+);
+
+
+/* ==========================================
+   LOAD SANTA
+========================================== */
+
+document.getElementById(
+    "status"
+).innerHTML =
+    "🌎 Earth working<br>🎅 Loading Santa...";
+
+
+const loader =
+    new THREE.GLTFLoader();
+
+
+loader.load(
+
+    "santa_-_norad_santa_tracker.glb",
+
+    function(gltf) {
+
+        console.log(
+            "SANTA MODEL LOADED!",
+            gltf
+        );
+
+
+        const model =
+            gltf.scene;
+
+
+        /* FIND SIZE */
+
+        const box =
+            new THREE.Box3()
+                .setFromObject(model);
+
+
+        const size =
+            new THREE.Vector3();
+
+
+        box.getSize(size);
+
+
+        const biggest =
+            Math.max(
+                size.x,
+                size.y,
+                size.z
+            );
+
+
+        console.log(
+            "Santa model size:",
+            size
+        );
+
+
+        /* SCALE */
+
+        if (biggest > 0) {
+
+            model.scale.setScalar(
+                0.7 / biggest
+            );
+
+        }
+
+
+        /* CENTER */
+
+        const centeredBox =
+            new THREE.Box3()
+                .setFromObject(model);
+
+
+        const center =
+            centeredBox.getCenter(
+                new THREE.Vector3()
+            );
+
+
+        model.position.sub(
+            center
+        );
+
+
+        /* ADD MODEL */
+
+        santaGroup.add(
+            model
+        );
+
+
+        document.getElementById(
+            "status"
+        ).innerHTML =
+            "🌎 EARTH WORKING<br>🎅 SANTA LOADED ✅";
+
+
+    },
+
+    function(progress) {
+
+        if (progress.total > 0) {
+
+            const percent =
+                Math.round(
+                    progress.loaded /
+                    progress.total *
+                    100
+                );
+
+            document.getElementById(
+                "status"
+            ).innerHTML =
+                "🌎 EARTH WORKING<br>🎅 Loading Santa " +
+                percent +
+                "%...";
+
+        }
+
+    },
+
+    function(error) {
+
+        console.error(
+            "SANTA LOAD ERROR:",
+            error
+        );
+
+
+        document.getElementById(
+            "status"
+        ).innerHTML =
+            "🌎 EARTH WORKING<br>❌ SANTA FAILED TO LOAD";
+
+    }
+
+);
+
+
+/* ==========================================
+   ANIMATION
+========================================== */
+
+function animate() {
+
+    requestAnimationFrame(
+        animate
+    );
+
+
+    earth.rotation.y += 0.002;
+
+
+    renderer.render(
+        scene,
+        camera
+    );
+
+}
+
+
+animate();
+
+
+/* ==========================================
+   RESIZE
+========================================== */
+
+window.addEventListener(
+    "resize",
+    function() {
+
+        camera.aspect =
+            window.innerWidth /
+            window.innerHeight;
+
+        camera.updateProjectionMatrix();
+
+        renderer.setSize(
+            window.innerWidth,
+            window.innerHeight
+        );
+
+    }
+);
+
+</script>
+
+</body>
+</html>
+```
