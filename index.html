@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Santa Tracker</title>
+<title>Santa Tracker Test</title>
 
 <style>
 html, body {
@@ -20,28 +20,23 @@ html, body {
     position: absolute;
     top: 20px;
     left: 20px;
-    z-index: 20;
+    z-index: 10;
     color: white;
-    background: rgba(0,0,0,0.85);
+    background: black;
     padding: 15px;
     font-family: Arial, sans-serif;
     font-size: 18px;
-    border-radius: 8px;
 }
 </style>
 
-<!-- THREE.JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-
-<!-- GLTF LOADER MUST COME BEFORE OUR CODE -->
-<script src="https://threejs.org/examples/js/loaders/GLTFLoader.js"></script>
 
 </head>
 
 <body>
 
 <div id="status">
-    🌎 Starting...
+    LOADING...
 </div>
 
 <script>
@@ -63,12 +58,13 @@ scene.background =
 const camera =
     new THREE.PerspectiveCamera(
         45,
-        window.innerWidth / window.innerHeight,
+        window.innerWidth /
+        window.innerHeight,
         0.1,
         100
     );
 
-camera.position.z = 5;
+camera.position.z = 7;
 
 
 /* ==========================================
@@ -83,6 +79,13 @@ const renderer =
 renderer.setSize(
     window.innerWidth,
     window.innerHeight
+);
+
+renderer.setPixelRatio(
+    Math.min(
+        window.devicePixelRatio,
+        2
+    )
 );
 
 document.body.appendChild(
@@ -109,203 +112,86 @@ light.position.set(
 scene.add(light);
 
 
-scene.add(
+const ambient =
     new THREE.AmbientLight(
         0xffffff,
         1
-    )
-);
+    );
+
+scene.add(ambient);
 
 
 /* ==========================================
    EARTH
 ========================================== */
 
-const earthGeometry =
-    new THREE.SphereGeometry(
-        2,
-        64,
-        64
-    );
-
-
-const earthMaterial =
-    new THREE.MeshPhongMaterial({
-        color: 0x1687ff
-    });
-
-
 const earth =
     new THREE.Mesh(
-        earthGeometry,
-        earthMaterial
+
+        new THREE.SphereGeometry(
+            2,
+            64,
+            64
+        ),
+
+        new THREE.MeshPhongMaterial({
+            color: 0x1687ff
+        })
+
     );
 
 scene.add(earth);
 
 
 /* ==========================================
-   SANTA GROUP
+   RED SANTA TEST
 ========================================== */
 
-const santaGroup =
-    new THREE.Group();
+const santaTest =
+    new THREE.Mesh(
 
-scene.add(santaGroup);
+        new THREE.BoxGeometry(
+            0.7,
+            0.7,
+            0.7
+        ),
+
+        new THREE.MeshPhongMaterial({
+            color: 0xff0000
+        })
+
+    );
 
 
 /*
-   Put Santa directly in front
-   of the Earth.
+   IMPORTANT:
+
+   Santa test is placed at the
+   CENTER of the scene.
+
+   We are doing this ONLY to
+   make sure the object renders.
 */
 
-santaGroup.position.set(
+santaTest.position.set(
     0,
     0,
-    2.5
+    0
+);
+
+scene.add(
+    santaTest
 );
 
 
 /* ==========================================
-   LOAD SANTA
+   STATUS
 ========================================== */
 
 document.getElementById(
     "status"
 ).innerHTML =
-    "🌎 Earth working<br>🎅 Loading Santa...";
-
-
-const loader =
-    new THREE.GLTFLoader();
-
-
-loader.load(
-
-    "santa_-_norad_santa_tracker.glb",
-
-    function(gltf) {
-
-        console.log(
-            "SANTA MODEL LOADED!",
-            gltf
-        );
-
-
-        const model =
-            gltf.scene;
-
-
-        /* FIND SIZE */
-
-        const box =
-            new THREE.Box3()
-                .setFromObject(model);
-
-
-        const size =
-            new THREE.Vector3();
-
-
-        box.getSize(size);
-
-
-        const biggest =
-            Math.max(
-                size.x,
-                size.y,
-                size.z
-            );
-
-
-        console.log(
-            "Santa model size:",
-            size
-        );
-
-
-        /* SCALE */
-
-        if (biggest > 0) {
-
-            model.scale.setScalar(
-                0.7 / biggest
-            );
-
-        }
-
-
-        /* CENTER */
-
-        const centeredBox =
-            new THREE.Box3()
-                .setFromObject(model);
-
-
-        const center =
-            centeredBox.getCenter(
-                new THREE.Vector3()
-            );
-
-
-        model.position.sub(
-            center
-        );
-
-
-        /* ADD MODEL */
-
-        santaGroup.add(
-            model
-        );
-
-
-        document.getElementById(
-            "status"
-        ).innerHTML =
-            "🌎 EARTH WORKING<br>🎅 SANTA LOADED ✅";
-
-
-    },
-
-    function(progress) {
-
-        if (progress.total > 0) {
-
-            const percent =
-                Math.round(
-                    progress.loaded /
-                    progress.total *
-                    100
-                );
-
-            document.getElementById(
-                "status"
-            ).innerHTML =
-                "🌎 EARTH WORKING<br>🎅 Loading Santa " +
-                percent +
-                "%...";
-
-        }
-
-    },
-
-    function(error) {
-
-        console.error(
-            "SANTA LOAD ERROR:",
-            error
-        );
-
-
-        document.getElementById(
-            "status"
-        ).innerHTML =
-            "🌎 EARTH WORKING<br>❌ SANTA FAILED TO LOAD";
-
-    }
-
-);
+    "🌎 EARTH WORKING<br>🔴 SANTA TEST AT CENTER";
 
 
 /* ==========================================
@@ -321,6 +207,8 @@ function animate() {
 
     earth.rotation.y += 0.002;
 
+    santaTest.rotation.y += 0.01;
+
 
     renderer.render(
         scene,
@@ -328,7 +216,6 @@ function animate() {
     );
 
 }
-
 
 animate();
 
